@@ -1,0 +1,125 @@
+:root {
+  color-scheme: light;
+  --surface-1: #fcfcfb;
+  --page: #f9f9f7;
+  --text-primary: #0b0b0b;
+  --text-secondary: #52514e;
+  --text-muted: #898781;
+  --grid: #e1e0d9;
+  --axis: #c3c2b7;
+  --border: rgba(11, 11, 11, 0.10);
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --wash: rgba(42, 120, 214, 0.08);
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme='light'])) {
+    color-scheme: dark;
+    --surface-1: #1a1a19;
+    --page: #0d0d0d;
+    --text-primary: #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted: #898781;
+    --grid: #2c2c2a;
+    --axis: #383835;
+    --border: rgba(255, 255, 255, 0.10);
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --wash: rgba(57, 135, 229, 0.14);
+  }
+}
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --surface-1: #1a1a19;
+  --page: #0d0d0d;
+  --text-primary: #ffffff;
+  --text-secondary: #c3c2b7;
+  --text-muted: #898781;
+  --grid: #2c2c2a;
+  --axis: #383835;
+  --border: rgba(255, 255, 255, 0.10);
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --wash: rgba(57, 135, 229, 0.14);
+}
+
+* { box-sizing: border-box; }
+html, body { padding: 0; margin: 0; }
+body {
+  background: var(--page);
+  color: var(--text-primary);
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+.wrap { max-width: 860px; margin: 0 auto; padding: 0 20px 96px; }
+
+/* ---------- type ---------- */
+h1 { font-size: clamp(2rem, 6vw, 3.1rem); line-height: 1.08; letter-spacing: -0.025em; margin: 0 0 18px; }
+h2 { font-size: clamp(1.3rem, 3.4vw, 1.65rem); line-height: 1.2; letter-spacing: -0.015em; margin: 64px 0 6px; }
+h3 { font-size: 1rem; margin: 32px 0 8px; letter-spacing: -0.005em; }
+p { margin: 0 0 16px; color: var(--text-secondary); }
+p.lede { font-size: 1.12rem; color: var(--text-secondary); }
+strong { color: var(--text-primary); font-weight: 650; }
+a { color: var(--series-1); }
+.kicker {
+  font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--text-muted); font-weight: 600; margin: 0 0 14px;
+}
+.sub { font-size: 0.86rem; color: var(--text-muted); margin: 0 0 20px; }
+
+/* ---------- surfaces ---------- */
+.card {
+  background: var(--surface-1); border: 1px solid var(--border);
+  border-radius: 12px; padding: 20px; margin: 20px 0;
+}
+.figure { margin: 24px 0 8px; }
+.figcap { font-size: 0.8rem; color: var(--text-muted); margin: 10px 0 0; }
+
+/* ---------- stat tiles ---------- */
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 28px 0; }
+.tile { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; }
+.tile .v { font-size: 1.9rem; font-weight: 680; letter-spacing: -0.03em; line-height: 1.1; }
+.tile .k { font-size: 0.78rem; color: var(--text-muted); margin-top: 4px; }
+
+/* ---------- charts ---------- */
+.chart { width: 100%; overflow-x: auto; }
+.chart svg { display: block; max-width: 100%; height: auto; }
+.legend { display: flex; gap: 18px; flex-wrap: wrap; margin: 0 0 12px; font-size: 0.82rem; color: var(--text-secondary); }
+.legend i { width: 11px; height: 11px; border-radius: 3px; display: inline-block; margin-right: 6px; vertical-align: -1px; }
+.tick { fill: var(--text-muted); font-size: 11px; }
+.tick-v { fill: var(--text-secondary); font-size: 11px; font-variant-numeric: tabular-nums; }
+.gridline { stroke: var(--grid); stroke-width: 1; }
+.baseline { stroke: var(--axis); stroke-width: 1; }
+.mark { transition: opacity 0.12s; }
+.mark:hover { opacity: 0.78; }
+
+/* ---------- table view ---------- */
+details.table { margin: 8px 0 0; }
+details.table summary { font-size: 0.8rem; color: var(--text-muted); cursor: pointer; }
+table { border-collapse: collapse; width: 100%; font-size: 0.82rem; margin-top: 10px; }
+th, td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--grid); }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* ---------- dog picker ---------- */
+.dogrow { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+select, button {
+  font: inherit; font-size: 0.9rem; padding: 9px 13px; border-radius: 9px;
+  border: 1px solid var(--border); background: var(--surface-1); color: var(--text-primary);
+}
+select { max-width: 100%; }
+button { background: var(--series-1); color: #fff; border: none; cursor: pointer; font-weight: 560; }
+button:disabled { opacity: 0.55; cursor: default; }
+.listing { white-space: pre-wrap; font-size: 1rem; color: var(--text-primary); line-height: 1.65; }
+.pill {
+  display: inline-block; font-size: 0.74rem; padding: 3px 9px; border-radius: 999px;
+  border: 1px solid var(--border); color: var(--text-secondary); margin: 0 6px 6px 0;
+}
+.pill.real { border-color: var(--series-2); color: var(--series-2); }
+.pill.myth { border-color: var(--series-1); color: var(--series-1); }
+pre.prompt {
+  white-space: pre-wrap; font-size: 0.76rem; line-height: 1.5; color: var(--text-secondary);
+  background: var(--page); border: 1px solid var(--border); border-radius: 9px; padding: 14px; overflow-x: auto;
+}
+.src { font-size: 0.76rem; color: var(--text-muted); }

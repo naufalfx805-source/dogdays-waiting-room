@@ -1,0 +1,18 @@
+[
+	{"color":"Blue","n":1845,"median_days":21.0,"avg_days":47.8,"pct_pit_bull":70.0},
+	{"color":"Fawn","n":563,"median_days":15.0,"avg_days":42.2,"pct_pit_bull":50.8},
+	{"color":"Brown Brindle","n":2287,"median_days":15.0,"avg_days":37.2,"pct_pit_bull":36.9},
+	{"color":"Brown","n":6452,"median_days":10.0,"avg_days":28.7,"pct_pit_bull":13.1},
+	{"color":"Chocolate","n":1085,"median_days":10.0,"avg_days":30.8,"pct_pit_bull":20.1},
+	{"color":"Black","n":12727,"median_days":9.0,"avg_days":27.2,"pct_pit_bull":9.5},
+	{"color":"White","n":7904,"median_days":9.0,"avg_days":28.3,"pct_pit_bull":16.5},
+	{"color":"Yellow","n":432,"median_days":8.0,"avg_days":23.9,"pct_pit_bull":2.1},
+	{"color":"Red","n":1816,"median_days":8.0,"avg_days":26.9,"pct_pit_bull":10.4},
+	{"color":"Sable","n":646,"median_days":8.0,"avg_days":21.2,"pct_pit_bull":1.9},
+	{"color":"Blue Merle","n":368,"median_days":8.0,"avg_days":24.7,"pct_pit_bull":3.0},
+	{"color":"Tan","n":5691,"median_days":8.0,"avg_days":25.7,"pct_pit_bull":11.1},
+	{"color":"Tricolor","n":2037,"median_days":7.0,"avg_days":20.5,"pct_pit_bull":4.0},
+	{"color":"Buff","n":429,"median_days":7.0,"avg_days":20.8,"pct_pit_bull":4.2},
+	{"color":"Cream","n":686,"median_days":7.0,"avg_days":17.8,"pct_pit_bull":1.6},
+	{"color":"Gray","n":394,"median_days":6.0,"avg_days":18.6,"pct_pit_bull":14.2}
+]

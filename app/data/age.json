@@ -1,0 +1,7 @@
+[
+	{"age_band":"under 6mo","n":14205,"median_days":6.0},
+	{"age_band":"5-8y","n":2447,"median_days":17.0},
+	{"age_band":"8y+","n":1991,"median_days":19.0},
+	{"age_band":"2-5y","n":10200,"median_days":14.0},
+	{"age_band":"6mo-2y","n":17871,"median_days":9.0}
+]

@@ -1,0 +1,9 @@
+.env
+.env.local
+node_modules/
+data/*.csv
+.next/
+.vercel/
+dist/
+*.duckdb
+__pycache__/
