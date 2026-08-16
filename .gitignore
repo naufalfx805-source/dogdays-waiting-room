@@ -7,3 +7,5 @@ data/*.csv
 dist/
 *.duckdb
 __pycache__/
+.bin/
+shots/

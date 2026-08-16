@@ -60,17 +60,30 @@ CREATE OR REPLACE TABLE adoptions AS
 SELECT * FROM stays
 WHERE animal_type = 'Dog' AND outcome_type = 'Adoption' AND los_days BETWEEN 0 AND 365
 ;;
+-- Built from CTEs rather than scalar subqueries in a FROM-less SELECT, which
+-- is the portable spelling and keeps each number traceable to one aggregate.
 CREATE OR REPLACE TABLE agg_headline AS
-SELECT
-  (SELECT COUNT(*) FROM intakes)   AS intake_rows,
-  (SELECT COUNT(*) FROM outcomes)  AS outcome_rows,
-  (SELECT COUNT(*) FROM stays)     AS paired_stays,
-  (SELECT COUNT(*) FROM stays WHERE animal_type='Dog') AS dog_stays,
-  (SELECT COUNT(*) FROM adoptions) AS dog_adoptions,
-  (SELECT MEDIAN(los_days) FROM adoptions WHERE is_pit_bull=1)         AS pit_median,
-  (SELECT MEDIAN(los_days) FROM adoptions WHERE is_pit_bull=0)         AS nonpit_median,
-  (SELECT MEDIAN(los_days) FROM adoptions WHERE primary_color='Black') AS black_median,
-  (SELECT MEDIAN(los_days) FROM adoptions WHERE primary_color<>'Black')AS nonblack_median
+WITH raw AS (
+  SELECT (SELECT COUNT(*) FROM intakes) AS intake_rows,
+         (SELECT COUNT(*) FROM outcomes) AS outcome_rows
+),
+st AS (
+  SELECT COUNT(*) AS paired_stays,
+         COUNT_IF(animal_type = 'Dog') AS dog_stays
+  FROM stays
+),
+ad AS (
+  SELECT COUNT(*) AS dog_adoptions,
+         MEDIAN(CASE WHEN is_pit_bull = 1 THEN los_days END)          AS pit_median,
+         MEDIAN(CASE WHEN is_pit_bull = 0 THEN los_days END)          AS nonpit_median,
+         MEDIAN(CASE WHEN primary_color = 'Black' THEN los_days END)  AS black_median,
+         MEDIAN(CASE WHEN primary_color <> 'Black' THEN los_days END) AS nonblack_median
+  FROM adoptions
+)
+SELECT raw.intake_rows, raw.outcome_rows, st.paired_stays, st.dog_stays,
+       ad.dog_adoptions, ad.pit_median, ad.nonpit_median,
+       ad.black_median, ad.nonblack_median
+FROM raw, st, ad
 ;;
 CREATE OR REPLACE TABLE agg_color AS
 SELECT primary_color AS color, COUNT(*) AS n,

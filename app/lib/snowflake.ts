@@ -34,6 +34,18 @@ export async function query<T = Record<string, unknown>>(sqlText: string): Promi
     conn.execute({ sqlText, complete: (err, _s, rows) => (err ? bad(err) : ok((rows ?? []) as T[])) }));
 }
 
+// Fixed-point columns (MEDIAN, ROUND, AVG) come back from the driver as
+// strings. The charts do arithmetic on these, so coerce them - but only these,
+// so a dog named "007" keeps its name.
+const NUMERIC = new Set([
+  'n', 'median_days', 'avg_days', 'pct_pit_bull', 'los_days', 'age_years',
+  'is_pit_bull', 'intake_rows', 'outcome_rows', 'paired_stays', 'dog_stays',
+  'dog_adoptions', 'pit_median', 'nonpit_median', 'black_median', 'nonblack_median',
+]);
+
 /** Snowflake returns column names upper-cased; the app speaks lower-case. */
 export const lower = <T,>(rows: Record<string, unknown>[]): T[] =>
-  rows.map((r) => Object.fromEntries(Object.entries(r).map(([k, v]) => [k.toLowerCase(), v]))) as T[];
+  rows.map((r) => Object.fromEntries(Object.entries(r).map(([k, v]) => {
+    const key = k.toLowerCase();
+    return [key, NUMERIC.has(key) && v != null ? Number(v) : v];
+  }))) as T[];
