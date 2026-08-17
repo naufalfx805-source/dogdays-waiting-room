@@ -1,10 +1,13 @@
 ---
 title: Everybody knows black dogs wait longer. 347,587 shelter records disagree.
 published: false
-tags: devchallenge, weekendchallenge, duckdb, ai
+tags: sql, datascience, duckdb, showdev
 ---
 
+<!-- To post this as a (late) Dog Days entry instead, swap the tags line for
+     `tags: devchallenge, weekendchallenge, duckdb, ai` and put this line here:
 *This is a submission for [Weekend Challenge: Dog Days Edition](https://dev.to/challenges/weekend-2026-08-13)*
+-->
 
 ## What I Built
 
@@ -143,7 +146,11 @@ review questions ("is this good?") with confident, invented reasoning, but answe
 constraint questions about a specific text correctly and instantly. So the model gets the writing
 job and a yes/no audit — never an open-ended judgement call.
 
-GEMINI_OUTPUT_PLACEHOLDER
+**Status, stated plainly:** this part is implemented and in the repo
+(`app/lib/penalty.ts`, `app/app/api/rewrite/route.ts`), but the live demo is a static export with
+no server, so the button is disabled there rather than failing on click. I ran out of clock before
+wiring a hosted key, and I'd rather ship the code and say so than paste an output I can't
+reproduce for you on demand.
 
 ### Charts
 
@@ -151,14 +158,6 @@ No chart library. The three figures are hand-written inline SVG with a hover lay
 labels, a table view behind a `<details>` for screen readers, and a two-colour categorical palette
 I validated for colour-vision deficiency before using it — which felt appropriate for a post about
 misreading what a coat colour means.
-
-## Prize Categories
-
-**Best Use of Google AI** — Gemini writes each dog's adoption listing, but it is never asked what
-makes a dog hard to adopt; SQL answers that and hands the model a brief naming the measured
-penalty to lead against and the myth to stay silent about. A second closed-question call audits
-that the constraint held. The AI is downstream of the finding, which is the only reason it says
-anything true.
 
 ---
 
