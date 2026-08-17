@@ -1,7 +1,28 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { BarChart, GroupedBarChart, Scatter } from '@/components/Charts';
-import { AGE_ORDER, type Findings, type Dog } from '@/lib/types';
+import { AGE_ORDER, type Findings, type Dog, type Headline, type ColorRow,
+  type ControlledRow, type BreedRow, type AgeRow } from '@/lib/types';
+
+import headlineJson from '@/data/headline.json';
+import colorJson from '@/data/color.json';
+import controlledJson from '@/data/color_controlled.json';
+import breedJson from '@/data/breed.json';
+import ageJson from '@/data/age.json';
+import dogsJson from '@/data/dogs.json';
+
+// The aggregates are a build artefact, not live state - import them rather than
+// round-tripping to an API route. That also lets the whole page export statically.
+const FINDINGS: Findings = {
+  source: 'bundled', elapsed_ms: 0,
+  ai_enabled: process.env.NEXT_PUBLIC_AI_ENABLED === '1',
+  headline: (headlineJson as Headline[])[0],
+  color: colorJson as ColorRow[],
+  controlled: controlledJson as ControlledRow[],
+  breed: breedJson as BreedRow[],
+  age: ageJson as AgeRow[],
+  dogs: dogsJson as Dog[],
+};
 
 type Rewrite = {
   listing: string; prompt: string; model: string; elapsed_ms: number;
@@ -10,21 +31,11 @@ type Rewrite = {
 };
 
 export default function Page() {
-  const [f, setF] = useState<Findings | null>(null);
-  const [dogId, setDogId] = useState('');
+  const f = FINDINGS;
+  const [dogId, setDogId] = useState(f.dogs[0]?.animal_id ?? '');
   const [rw, setRw] = useState<Rewrite | null>(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
-
-  useEffect(() => {
-    fetch('/api/findings').then((r) => r.json()).then((d: Findings) => {
-      setF(d);
-      if (d.dogs?.length) setDogId(d.dogs[0].animal_id);
-    }).catch(() => setErr('could not load findings'));
-  }, []);
-
-  if (err && !f) return <main className="wrap"><p style={{ marginTop: 80 }}>{err}</p></main>;
-  if (!f) return <main className="wrap"><p style={{ marginTop: 80 }} className="src">Querying the warehouse…</p></main>;
 
   const h = f.headline;
   const dog = f.dogs.find((d) => d.animal_id === dogId) ?? f.dogs[0];
@@ -63,7 +74,8 @@ export default function Page() {
           Black dog syndrome is the best-known piece of folklore in animal rescue: dark-coated dogs
           are said to sit in shelters far longer than light ones. Shelters repeat it themselves, and
           it is why some of them run black-dog promotions. So I loaded every intake and outcome
-          Austin Animal Center has published into Snowflake and measured it.
+          Austin Animal Center has published — 347,587 rows — into a columnar warehouse and
+          measured it.
         </p>
         <p className="lede">
           The median black dog is adopted in <strong>{h.black_median} days</strong>.
@@ -83,8 +95,8 @@ export default function Page() {
         ))}
       </section>
       <p className="src">
-        Source: <code>{f.source === 'snowflake' ? 'live Snowflake query' : 'bundled aggregate export'}</code>
-        {' · '}{f.elapsed_ms} ms
+        Aggregates computed in DuckDB over the raw CSVs and shipped with the page.
+        A Snowflake pipeline that reproduces them is in the repo.
       </p>
 
       <h2>1. The folklore, measured</h2>
@@ -177,8 +189,15 @@ export default function Page() {
               </option>
             ))}
           </select>
-          <button onClick={rewrite} disabled={busy}>{busy ? 'Writing…' : 'Write the listing'}</button>
+          <button onClick={rewrite} disabled={busy || !f.ai_enabled}>
+            {busy ? 'Writing…' : 'Write the listing'}
+          </button>
         </div>
+        {!f.ai_enabled && (
+          <p className="src" style={{ marginBottom: 12 }}>
+            Live generation is off in this deployment — no Gemini key configured.
+          </p>
+        )}
 
         {dog && (
           <p className="src" style={{ marginBottom: 12 }}>
@@ -227,7 +246,7 @@ export default function Page() {
       <p className="src">
         Data: <a href="https://data.austintexas.gov/Government/Austin-Animal-Center-Intakes/wter-evkm">Austin Animal Center Intakes</a>
         {' and '}<a href="https://data.austintexas.gov/Government/Austin-Animal-Center-Outcomes/9t4d-g238">Outcomes</a>,
-        public domain. Warehouse: Snowflake. Listing text: Google Gemini.
+        public domain. Analysis: DuckDB. Listing text: Google Gemini.
         Breed here is the shelter&rsquo;s own visual identification, which is known to be unreliable
         for bully breeds — that is a property of the label, and it is the label adopters see too.
       </p>

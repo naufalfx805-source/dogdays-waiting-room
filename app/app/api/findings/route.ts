@@ -17,7 +17,7 @@ export const maxDuration = 60;
  *  warehouse is asleep, and it always says so in the UI. */
 function bundled(elapsed_ms: number): Findings {
   return {
-    source: 'bundled', elapsed_ms,
+    source: 'bundled', elapsed_ms, ai_enabled: Boolean(process.env.GEMINI_API_KEY),
     headline: (headlineJson as Headline[])[0],
     color: colorJson as ColorRow[],
     controlled: controlledJson as ControlledRow[],
@@ -42,6 +42,7 @@ export async function GET() {
     ]);
     return NextResponse.json({
       source: 'snowflake', elapsed_ms: Date.now() - t0,
+      ai_enabled: Boolean(process.env.GEMINI_API_KEY),
       headline: lower<Headline>(headline)[0],
       color: lower<ColorRow>(color),
       controlled: lower<ControlledRow>(controlled),

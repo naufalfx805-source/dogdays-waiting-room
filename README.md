@@ -3,10 +3,15 @@
 **Everybody knows black dogs wait longer. 347,587 shelter records disagree.**
 
 A DEV Weekend Challenge: Dog Days Edition submission. It loads every intake and outcome
-Austin Animal Center has published into **Snowflake**, reconstructs each dog's actual shelter
-stay, and tests the best-known piece of rescue folklore — *black dog syndrome* — against
+Austin Animal Center has published into a columnar warehouse, reconstructs each dog's actual
+shelter stay, and tests the best-known piece of rescue folklore — *black dog syndrome* — against
 46,749 real adoptions. Then it uses **Google Gemini** to write adoption listings that argue
 against the disadvantage the data actually found, instead of the one everybody assumes.
+
+> The published numbers were computed by the **DuckDB** path (`pipeline/explore.sql`,
+> `confound.sql`, `export.sql`). A complete **Snowflake** pipeline that stages the same CSVs and
+> materialises the same five aggregates ships in `pipeline/snowflake.sql` + `load.mjs` and the app
+> will read from it when credentials are present — but it is not what produced these figures.
 
 ## The finding
 
@@ -32,18 +37,21 @@ actually decides how long a dog waits is breed (27 vs 8 days) and age (6 days fo
 ## How it works
 
 ```
-Socrata open data  ->  Snowflake  ->  Next.js  ->  Gemini
-   347,587 rows        stays +         charts      listing
-                       aggregates                  written to brief
+Socrata open data  ->  DuckDB    ->  Next.js  ->  Gemini
+   347,587 rows        stays +        charts      listing
+                       aggregates                 written to brief
+                    (Snowflake pipeline optional)
 ```
 
 1. `pipeline/fetch.sh` pulls both public datasets as CSV.
-2. `pipeline/load.mjs` PUTs them to a Snowflake stage, `COPY INTO`s the raw tables, and runs
-   `pipeline/snowflake.sql`.
-3. That SQL pairs intakes to outcomes and materialises five aggregate tables.
-4. The Next.js app queries those tables live and renders the story.
-5. `app/lib/penalty.ts` turns one dog + the aggregates into its measured disadvantage; the
+2. `pipeline/explore.sql` and `confound.sql` pair intakes to outcomes and run the analysis;
+   `export.sql` materialises five aggregate tables and dumps them to `app/data/*.json`.
+3. The Next.js app serves those aggregates and renders the story.
+4. `app/lib/penalty.ts` turns one dog + the aggregates into its measured disadvantage; the
    `/api/rewrite` route hands that to Gemini as a brief.
+5. Optional: `pipeline/load.mjs` PUTs the CSVs to a Snowflake stage, `COPY INTO`s them and runs
+   `pipeline/snowflake.sql` to build the same five tables in Snowflake; the app reads from there
+   instead when `SNOWFLAKE_*` is set.
 
 ### The join that isn't obvious
 
@@ -76,16 +84,17 @@ constraint checks are not.
 ## Running it
 
 ```bash
-cp .env.example .env      # add Snowflake + Gemini credentials
-pipeline/fetch.sh         # ~2 min, 56 MB
-cd app && npm install
-node ../pipeline/load.mjs # builds the warehouse
-npm run dev
+cp .env.example .env                       # GEMINI_API_KEY for the rewriter
+pipeline/fetch.sh                          # ~2 min, 56 MB
+duckdb waiting.duckdb < pipeline/explore.sql   # the analysis
+duckdb waiting.duckdb < pipeline/confound.sql  # the breed control
+duckdb waiting.duckdb < pipeline/export.sql    # -> app/data/*.json
+cd app && npm install && npm run dev
 ```
 
-Without Snowflake credentials the app serves a bundled export of the same aggregates and says
-so in the UI. `pipeline/explore.sql` and `confound.sql` reproduce the whole analysis locally in
-DuckDB against the same CSVs.
+The aggregates are committed, so the app runs without re-running the pipeline. With no
+`GEMINI_API_KEY` the listing writer is disabled in the UI rather than failing on click. To use
+Snowflake instead, fill in the `SNOWFLAKE_*` keys and run `node pipeline/load.mjs`.
 
 ## Data
 

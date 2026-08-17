@@ -17,6 +17,7 @@ export type Dog = {
 export type Findings = {
   source: 'snowflake' | 'bundled';
   elapsed_ms: number;
+  ai_enabled: boolean;
   headline: Headline;
   color: ColorRow[];
   controlled: ControlledRow[];

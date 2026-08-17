@@ -1,7 +1,7 @@
 ---
 title: Everybody knows black dogs wait longer. 347,587 shelter records disagree.
 published: false
-tags: devchallenge, weekendchallenge, snowflake, ai
+tags: devchallenge, weekendchallenge, duckdb, ai
 ---
 
 *This is a submission for [Weekend Challenge: Dog Days Edition](https://dev.to/challenges/weekend-2026-08-13)*
@@ -9,8 +9,8 @@ tags: devchallenge, weekendchallenge, snowflake, ai
 ## What I Built
 
 **The Waiting Room** — I loaded every animal intake and outcome Austin Animal Center has ever
-published into Snowflake, reconstructed how long each dog actually sat in the shelter, and used it
-to test the most repeated piece of folklore in animal rescue.
+published into a columnar warehouse, reconstructed how long each dog actually sat in the shelter,
+and used it to test the most repeated piece of folklore in animal rescue.
 
 *Black dog syndrome* is the belief that dark-coated dogs wait far longer to be adopted than light
 ones. Shelters repeat it. Some run black-dog promotions because of it. I had never seen anyone
@@ -30,12 +30,10 @@ But the story didn't end there, and the second half is why I kept going.
 
 ## Demo
 
-**[LIVE_URL_PLACEHOLDER]**
+### 🐕 **[naufalfx805-source.github.io/dogdays-waiting-room](https://naufalfx805-source.github.io/dogdays-waiting-room/)**
 
-The page walks through the analysis, then ends on something I think is more useful than another
-chart: pick a **real dog** from the dataset who waited a month or more, and the app computes that
-specific dog's measured disadvantage in SQL, then has Gemini write its adoption listing to argue
-against *that* — and to stay silent about the thing everybody assumes is the problem.
+The page walks through the whole analysis — every number on it is computed from the raw data, and
+every chart has a table view behind it if you'd rather read the figures.
 
 ![The Waiting Room](SCREENSHOT_1)
 
@@ -45,17 +43,14 @@ against *that* — and to stay silent about the thing everybody assumes is the p
 
 ## How I Built It
 
-### Getting 347,587 rows into Snowflake
+### Getting 347,587 rows into a warehouse
 
 Austin Animal Center publishes two Socrata datasets — 173,812 intakes and 173,775 outcomes.
-`pipeline/fetch.sh` pulls both as CSV (~56 MB), then `pipeline/load.mjs` stages and loads them:
-
-```js
-await step(`PUT ${name}.csv`,
-  `PUT file://${ROOT}/data/${name}.csv @raw_stage AUTO_COMPRESS=TRUE OVERWRITE=TRUE`);
-await step(`COPY INTO ${name}`,
-  `COPY INTO ${name} FROM @raw_stage/${name}.csv.gz FILE_FORMAT=(FORMAT_NAME=csv_fmt)`);
-```
+`pipeline/fetch.sh` pulls both as CSV (~56 MB) and the analysis runs in DuckDB against them
+directly. The repo also ships a complete Snowflake pipeline (`pipeline/snowflake.sql` +
+`load.mjs`) that stages the same CSVs and materialises the same five aggregate tables — I wrote it
+first and kept it, but the numbers in this post were computed by the DuckDB path, so I'm not going
+to claim a warehouse I didn't end up running.
 
 ### The join that bit me
 
@@ -72,7 +67,7 @@ WITH i AS (
 ), o AS (
   SELECT ..., ROW_NUMBER() OVER (PARTITION BY animal_id ORDER BY outcome_ts) AS seq FROM outcomes
 )
-SELECT ..., DATEDIFF(day, i.intake_ts, o.outcome_ts) AS los_days
+SELECT ..., DATE_DIFF('day', i.intake_ts, o.outcome_ts) AS los_days
 FROM i JOIN o ON i.animal_id = o.animal_id AND i.seq = o.seq
 WHERE o.outcome_ts >= i.intake_ts
 ```
@@ -85,7 +80,7 @@ Ranking coat colours by median wait, black lands mid-table next to white. But on
 sticks out: **Blue** dogs wait 21 days, more than double the median.
 
 "Blue" is a grey-slate coat. If you know dogs, you already know where this is going. So I asked
-Snowflake what share of each colour the shelter had recorded as a pit bull:
+what share of each colour the shelter had recorded as a pit bull:
 
 ```sql
 SELECT primary_color, COUNT(*) n,
@@ -127,8 +122,8 @@ If a shelter writes *"don't overlook me because of my black coat"*, it spends th
 defending against a disadvantage that **does not exist** — and repeats the myth to every person
 who reads it. Meanwhile the real 19-day problem goes unaddressed.
 
-So the warehouse decides the argument and Gemini only executes it. `app/lib/penalty.ts` turns one
-dog plus the aggregates into a list of factors, each flagged real or myth, and the prompt says:
+So the data decides the argument and Gemini only executes it. `app/lib/penalty.ts` turns one dog
+plus the aggregates into a list of factors, each flagged real or myth, and the prompt says:
 
 ```
 STRATEGY (decided by the data, not by you)
@@ -158,12 +153,6 @@ I validated for colour-vision deficiency before using it — which felt appropri
 misreading what a coat colour means.
 
 ## Prize Categories
-
-**Best Use of Snowflake** — Snowflake is the whole analysis, not a storage layer. 347,587 raw rows
-staged and `COPY INTO`'d, `ROW_NUMBER()` window functions to reconstruct 172,069 stays from tables
-with no stay key, and five materialised aggregate tables that the app queries live on every page
-load. The confound that makes the story — 70% of blue dogs being pit bulls — is a single
-`GROUP BY` that would have been invisible without putting the data somewhere that could join it.
 
 **Best Use of Google AI** — Gemini writes each dog's adoption listing, but it is never asked what
 makes a dog hard to adopt; SQL answers that and hands the model a brief naming the measured
